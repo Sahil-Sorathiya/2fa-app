@@ -125,23 +125,23 @@ exports.validateDomain = (req, res, next) => {
     });
   }
 
-  if (!req.body.domain) {
+  if (!req.body.domainname) {
     return res.status(400).json({
       error: true,
       errorMessage: "Required parameters are not there",
     });
   }
 
-  const { domain } = req.body;
+  const { domainname } = req.body;
 
-  if (typeof domain !== "string") {
+  if (typeof domainname !== "string") {
     return res.status(400).json({
       error: true,
       errorMessage: "Domain is not a string",
     });
   }
 
-  const isDomain = validator.isFQDN(domain);
+  const isDomain = validator.isFQDN(domainname);
 
   if (!isDomain) {
     return res.status(400).json({

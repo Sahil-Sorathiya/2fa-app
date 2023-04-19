@@ -22,7 +22,7 @@ exports.verifyTxtRecord = async (req, res, next) => {
   //: }
   //: if(domain not found) send error that domain is not saved in DB
   try {
-    const { domain } = req.body;
+    const { domainname } = req.body;
     //: extract clientid from req.clientData set by isAuthenticated middleware
     const clientid = req.clientData._id;
     //: fetch all latest details of that user from database
@@ -34,7 +34,7 @@ exports.verifyTxtRecord = async (req, res, next) => {
     //: iterate domains array and check that domain given in req.body is saved in database or not
     for (let index = 0; index < client.domains.length; index++) {
       const item = client.domains[index];
-      if (item.domainname === domain) {
+      if (item.domainname === domainname) {
         //: if (domain found) set isDomainSaved to true and save "txt record" & "verified" value from db to variables for letter use
         isDomainSaved = true;
         txtInDatabase = item.txt;
@@ -48,7 +48,7 @@ exports.verifyTxtRecord = async (req, res, next) => {
       const options = {
         method: "GET",
         url: "https://dns-lookup-by-api-ninjas.p.rapidapi.com/v1/dnslookup",
-        params: { domain },
+        params: { domainname },
         headers: {
           "X-RapidAPI-Key": process.env.RAPIDAPIKEY,
           "X-RapidAPI-Host": "dns-lookup-by-api-ninjas.p.rapidapi.com",
@@ -90,7 +90,7 @@ exports.verifyTxtRecord = async (req, res, next) => {
             //: as of now I changed the verification status from true to false
             try {
               const acknowledged = await Client.updateOne(
-                {_id: clientid, "domains.domainname": domain},
+                {_id: clientid, "domains.domainname": domainname},
                 {
                   $set: {
                     "domains.$.verified": false,

@@ -113,7 +113,7 @@ exports.verifyTxtRecord = async (req, res, next) => {
           }
           return res.status(400).json({
             error: true,
-            errorMessage: "Domain verification unsuccessfull",
+            errorMessage: "It will take a while to propagate the TXT record. Please wait upto 24hrs after updating TXT record",
           });
         }
       });

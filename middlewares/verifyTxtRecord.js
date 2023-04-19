@@ -48,7 +48,7 @@ exports.verifyTxtRecord = async (req, res, next) => {
       const options = {
         method: "GET",
         url: "https://dns-lookup-by-api-ninjas.p.rapidapi.com/v1/dnslookup",
-        params: { domainname },
+        params: { domain: domainname },
         headers: {
           "X-RapidAPI-Key": process.env.RAPIDAPIKEY,
           "X-RapidAPI-Host": "dns-lookup-by-api-ninjas.p.rapidapi.com",
@@ -76,7 +76,7 @@ exports.verifyTxtRecord = async (req, res, next) => {
       txtRecords.forEach(async(txtRecord) => {
         const txtUuid = txtRecord.value.split("=")[1];
         //: if (both uuid matched) call next()
-        if (txtInDatabase !== txtUuid) {
+        if (txtInDatabase === txtUuid) {
           return next();
         } 
         //: if (both uuid not matched) send error message that verification is unsuccessfull
@@ -98,7 +98,7 @@ exports.verifyTxtRecord = async (req, res, next) => {
                 }
               )
             
-              if (!acknowledged.acknowledged) {
+              if (acknowledged.modifiedCount == 0) {
                 return res.status(400).json({
                   error: true,
                   errorMessage: "Verification status not updated in Database",

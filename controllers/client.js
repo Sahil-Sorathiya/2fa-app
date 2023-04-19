@@ -254,7 +254,7 @@ exports.saveDomainAndGenerateTxt = async (req, res) => {
     );
 
     //: if(not updated) send error
-    if (!dbResponse?.acknowledged) {
+    if (!dbResponse.modifiedCount == 0) {
       return res.status(400).json({
         error: true,
         successMessage: "Domain not updated in DB",
@@ -287,10 +287,10 @@ exports.verifyTxt = async (req, res) => {
   //: extract clientid from req.clientData set by isAuthenticated middleware
   const clientid = req.clientData._id;
   //: extract domain from body
-  const domain = req.body.domain;
+  const domainname = req.body.domainname;
   //: update verified field of that domain in database
   const acknowledged = await Client.updateOne(
-    {_id: clientid, "domains.domainname": domain},
+    {_id: clientid, "domains.domainname": domainname},
     {
       $set: {
         "domains.$.verified": true,
@@ -298,7 +298,7 @@ exports.verifyTxt = async (req, res) => {
     }
   )
   //: if(!updated) send error message
-  if (!acknowledged.acknowledged) {
+  if (acknowledged.modifiedCount == 0) {
     return res.status(400).json({
       error: true,
       errorMessage: "Verification status not updated in Database",

@@ -56,7 +56,6 @@ exports.register = async (req, res) => {
     });
     // TODO before final production remove verificationUrl and maildata fields from response
   } catch (error) {
-    // console.log(error);
     return res.status(400).json({
       error: true,
       errorMessage: error.message,
@@ -74,7 +73,6 @@ exports.verify = async (req, res) => {
   const { token } = req.params;
   try {
     const decodedData = await jwt.verify(token, process.env.JWTSECRET);
-    // console.log(decodedData);
     const { uid, clientname, password, email } = decodedData;
 
     //: Checking that user is already verified or not
@@ -105,7 +103,6 @@ exports.verify = async (req, res) => {
     if (error.name === "JsonWebTokenError") {
       errorMessage = error.message;
     }
-    // console.log(error);
     return res.status(400).send(errorMessage);
   }
 };

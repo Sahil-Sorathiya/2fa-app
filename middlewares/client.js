@@ -1,14 +1,12 @@
 const validator = require("validator");
 
 exports.validateRegister = (req, res, next) => {
-  // console.log("Validate register called");
   if (!req.body) {
     return res.status(400).json({
       error: true,
       errorMessage: "Request body not found",
     });
   }
-  // console.log(req.body);
   if (!req.body.email || !req.body.password || !req.body.clientname) {
     return res.status(400).json({
       error: true,
@@ -52,12 +50,6 @@ exports.validateRegister = (req, res, next) => {
     });
   }
 
-  // if (password.length < 7) {
-  //   return res.status(400).json({
-  //     error: true,
-  //     errorMessage: "Password must contains atleast 8 characters",
-  //   });
-  // }
   if (password.length > 32) {
     return res.status(400).json({
       error: true,
@@ -71,19 +63,16 @@ exports.validateRegister = (req, res, next) => {
       errorMessage: "Password must contain atleast 8 characters, one Capital letter, one small letter, one special character and one numaric value."
     })
   }
-  // console.log("Validate register finished");
   next();
 };
 
 exports.validateLogin = (req, res, next) => {
-  // console.log("Validate Login called");
   if (!req.body) {
     return res.status(400).json({
       error: true,
       errorMessage: "Request body not found",
     });
   }
-  // console.log(req.body);
   if (!req.body.email || !req.body.password) {
     return res.status(400).json({
       error: true,
@@ -113,7 +102,6 @@ exports.validateLogin = (req, res, next) => {
       errorMessage: "Email is invalid",
     });
   }
-  // console.log("Validate register finished");
   next();
 };
 

@@ -10,6 +10,7 @@ const {
   dashboard,
   saveDomainAndGenerateTxt,
   verifyTxt,
+  generateApiKey,
 } = require("../controllers/client");
 const {
   validateRegister,
@@ -35,6 +36,8 @@ router.get("/dashboard/:clientid", isAuthenticated, isAuthorized, dashboard);
 router.post("/savedomain/:clientid", isAuthenticated, isAuthorized, validateDomain, saveDomainAndGenerateTxt);
 
 router.post("/verifytxt/:clientid",isAuthenticated, isAuthorized, validateDomain, verifyTxtRecord, verifyTxt);
+
+router.get("/generateapikey/:clientid", isAuthenticated, isAuthorized, generateApiKey)
 
 // router.get("/redirect", (req, res)=>{
 //   console.log(req.cookies)

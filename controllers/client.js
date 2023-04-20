@@ -254,7 +254,7 @@ exports.saveDomainAndGenerateTxt = async (req, res) => {
     );
 
     //: if(not updated) send error
-    if (!dbResponse.modifiedCount == 0) {
+    if (dbResponse.modifiedCount == 0) {
       return res.status(400).json({
         error: true,
         successMessage: "Domain not updated in DB",
@@ -312,3 +312,60 @@ exports.verifyTxt = async (req, res) => {
 
 }
 
+exports.generateApiKey = async (req, res)=>{
+  /**
+   *: extract clientid from req.clientData set by isAuthenticated middleware
+   *: fetch all latest details of that user from database
+   *: if(API-key already generated) send error that only one api at a time
+   *: if(API-key not already generated) {
+   *:   generate API-key using uuid and save time when that API-key generated
+   *:   update value of "api" & "apiUpdatedAt" fields in database
+   *:   if(API-key not updated) send error that API-key not updated in DB
+   *:   if(API-key updated) send success message with that API-key & generatedAt values
+   *: }
+   */
+
+  try {
+    //: extract clientid from req.clientData set by isAuthenticated middleware
+    const clientid = req.clientData._id;
+    //: fetch all latest details of that user from database
+    const client = await Client.findOne({_id: clientid});
+    //: if(API-key already generated) send error that only one api at a time
+    if (client.api) {
+      return res.status(400).json({
+        error: true,
+        errorMessage: "Client must have only one API-key at a time. Please delete the API-key and then generate new API"
+      })
+    }
+    //: if(API-key not already generated) {
+    //: generate API-key using uuid and save time when that API-key generated
+    const apiKey = uuidv4();
+    const generatedAt = new Date();
+    //: update value of "api" & "apiUpdatedAt" fields in database
+    const dbResponse = await Client.updateOne({_id: req.clientData._id},{
+      $set: {
+        api: apiKey,
+        apiUpdatedAt: generatedAt
+      }
+    })
+    //: if(API-key not updated) send error that API-key not updated in DB
+    if(dbResponse.acknowledged == 0){
+      return res.status(400).json({
+        error: true,
+        errorMessage: "API-key not updated in Database"
+      })
+    }
+    //: if(API-key updated) send success message with that API-key & generatedAt values
+    return res.status(200).json({
+      error: false,
+      successMessage: "API-key generated successfully",
+      apiKey: apiKey,
+      generatedAt: generatedAt 
+    })
+  } catch (error) {
+    return res.status(400).json({
+      error: true,
+      errorMessage: error.message
+    })
+  }
+}

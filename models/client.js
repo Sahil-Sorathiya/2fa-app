@@ -19,6 +19,12 @@ const clientSchema = new mongoose.Schema({
         min: 8,
         max: 32
     },
+    api: {
+        type: String,
+    },
+    apiUpdatedAt: {
+        type: Date,
+    },
     domains: [{
         domainname: {
             type: String,
@@ -29,13 +35,8 @@ const clientSchema = new mongoose.Schema({
             type: Boolean,
             default: false
         },
-        api: {
-            type: String,
-            default: undefined
-        },
         txt:{
             type: String,
-            default: undefined
         }
     }]
 }, { timestamps: true })

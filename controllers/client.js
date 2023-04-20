@@ -1,5 +1,6 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const moment = require('moment');
 const { v4: uuidv4 } = require("uuid");
 const { sendMail } = require("../helpers/nodemailer");
 const Client = require("../models/client");
@@ -319,29 +320,32 @@ exports.getApiKey = async (req, res) => {
   /**
    *: extract clientid from req.clientData set by isAuthenticated middleware
    *: fetch all latest details of that user from database
-   *: if(no API-key found) send success message with "apiKey" & "generatedAt" as null
-   *: if(API-key found) send success message with "apiKey" & "generatedAt" with its value
+   *: if(no API-key found) send success message with "apiKey" & "generatedAt" & "clientname" as null
+   *: if(API-key found) send success message with "apiKey" & "generatedAt" & "clientname" with its value
    */
   try {
     //: extract clientid from req.clientData set by isAuthenticated middleware
     const clientid = req.clientData._id;
     //: fetch all latest details of that user from database
     const client = await Client.findOne({ _id: clientid });
-    //: if(no API-key found) send success message with "apiKey" & "generatedAt" as null
+    //: if(no API-key found) send success message with "apiKey" & "generatedAt" & "clientname" as null
     if (!client.api) {
       return res.status(200).json({
         error: false,
         successMessage: "No API-key exist in database",
         apiKey: null,
-        generatedAt: null
+        generatedAt: null,
+        clientname: client.clientname
       });
     }
-    //: if(API-key found) send success message with "apiKey" & "generatedAt" with its value
+    const generatedAt = moment(client.apiUpdatedAt).format("dddd, MMMM Do YYYY");;
+    //: if(API-key found) send success message with "apiKey" & "generatedAt" & "clientname" with its value
     return res.status(200).json({
       error: false,
       successMessage: "API-key sent successfully",
       apiKey: client.api,
-      generatedAt: client.apiUpdatedAt
+      generatedAt: generatedAt,
+      clientname: client.clientname
     })
 
   } catch (error) {
@@ -375,7 +379,7 @@ exports.generateApiKey = async (req, res) => {
       return res.status(400).json({
         error: true,
         errorMessage:
-          "Client must have only one API-key at a time. Please delete the API-key and then generate new API",
+          "Client must have only one API-key at a time. Please delete the API-key and then generate new API-key",
       });
     }
     //: if(API-key not already generated) {

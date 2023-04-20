@@ -11,6 +11,7 @@ const {
   saveDomainAndGenerateTxt,
   verifyTxt,
   generateApiKey,
+  deleteApiKey,
 } = require("../controllers/client");
 const {
   validateRegister,
@@ -39,10 +40,7 @@ router.post("/verifytxt/:clientid",isAuthenticated, isAuthorized, validateDomain
 
 router.get("/generateapikey/:clientid", isAuthenticated, isAuthorized, generateApiKey)
 
-// router.get("/redirect", (req, res)=>{
-//   console.log(req.cookies)
-//   return res.send(req.cookies)
-// })
+router.delete("/deleteapikey/:clientid", isAuthenticated, isAuthorized, deleteApiKey)
 
 module.exports = router;
 

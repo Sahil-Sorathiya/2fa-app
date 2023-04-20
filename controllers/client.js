@@ -369,3 +369,59 @@ exports.generateApiKey = async (req, res)=>{
     })
   }
 }
+
+exports.deleteApiKey = async(req, res)=> {
+  /**
+   *: extract clientid from req.clientData set by isAuthenticated middleware
+   *: fetch all latest details of that user from database
+   *: if("api" & "apiUpdatedAt" fields are null or undefined) send error that  no API-key exists in Database
+   *: if("api" & "apiUpdatedAt" fields exist) {
+   *:   set & update value of "api" & "apiUpdatedAt" fields to "null" in database
+   *:   if(API-key not update) send error that API-key not deleted in DB
+   *:   if(API-key updated) send success message that API-key deleted
+   *: }
+   */
+  try {
+    //: extract clientid from req.clientData set by isAuthenticated middleware
+    const clientid = req.clientData._id;
+    //: fetch all latest details of that user from database
+    const client = await Client.findOne({_id: clientid})
+    //: if("api" & "apiUpdatedAt" fields are null or undefined) send error that no API-key exists in Database
+    if(!client.api && !client.apiUpdatedAt){
+      return res.status(400).json({
+        error: true,
+        errorMessage: "No API-key exists in database"
+      })
+    }
+    //: if("api" & "apiUpdatedAt" fields exist) {
+    //: set & update value of "api" & "apiUpdatedAt" fields to "null" in database
+    const dbResponse = await Client.updateOne({_id: req.clientData._id},{
+      $set: {
+        api: null,
+        apiUpdatedAt: null
+      }
+    })
+
+    //: if(API-key not update) send error that API-key not deleted in DB
+    if(dbResponse.acknowledged == 0){
+      return res.status(400).json({
+        error: true,
+        errorMessage: "API-key not deleted in Database"
+      })
+    }
+
+    //: if(API-key updated) send success message that API-key deleted
+    return res.status(200).json({
+      error: false,
+      successMessage: "API-key deleted successfully",
+    })
+  } catch (error) {
+    return res.status(400).json({
+      error: true,
+      errorMessage: error.message
+    })
+  }
+
+
+
+}

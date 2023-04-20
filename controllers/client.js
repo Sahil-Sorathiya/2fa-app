@@ -25,9 +25,8 @@ exports.register = async (req, res) => {
     if (clientDataTemp) {
       return res.status(400).json({
         error: true,
-        errorMessage:
-          "Email already exist. Go for login."
-      })
+        errorMessage: "Email already exist. Go for login.",
+      });
     }
 
     //: if (not already registered) {
@@ -46,13 +45,16 @@ exports.register = async (req, res) => {
     //: generate JWT token with all client data
     const verificationUrl = `${process.env.PROTOCOL}://${process.env.DOMAINNAME}/client/verify/${token}`;
     //: send verification mail to given email id and send success message
-    const maildata = (process.env.SENDMAIL === "true") ? await sendMail(email, verificationUrl) : `Hello I'm maildata ${email, verificationUrl}` 
+    const maildata =
+      process.env.SENDMAIL === "true"
+        ? await sendMail(email, verificationUrl)
+        : `Hello I'm maildata ${(email, verificationUrl)}`;
     return res.status(200).json({
       error: false,
       successMessage:
-      "Verification mail sent successfully to given email address",
+        "Verification mail sent successfully to given email address",
       verificationUrl,
-      maildata
+      maildata,
     });
     // TODO before final production remove verificationUrl and maildata fields from response
   } catch (error) {
@@ -149,7 +151,7 @@ exports.login = async (req, res) => {
       error: false,
       successMessage: "Login Successfully",
       token: token,
-      clientid: clientData._id
+      clientid: clientData._id,
     });
   } catch (error) {
     return res.status(400).json({
@@ -169,33 +171,35 @@ exports.privateRoute = (req, res) => {
 
 exports.dashboard = async (req, res) => {
   //! # Private Route
- /**
-  *: extract clientid from req.clientData set by isAuthenticated middleware
-  *: fetch all latest details of that user from database 
-  *: set password field undefined
-  *: send success message with whole client's data
-  */ 
+  /**
+   *: extract clientid from req.clientData set by isAuthenticated middleware
+   *: fetch all latest details of that user from database
+   *: set password, api & apiUpdatedAt field undefined
+   *: send success message with whole client's data
+   */
 
   try {
     //: extract clientid from req.clientData set by isAuthenticated middleware
-    const clientid = req.clientData._id
+    const clientid = req.clientData._id;
     //: fetch all latest details of that user from database
-    const client = await Client.findOne({ _id: clientid})
-    //: set password field undefined
-    client.password = undefined
+    const client = await Client.findOne({ _id: clientid });
+    //: set password, api & apiUpdatedAt field undefined
+    client.password = undefined;
+    client.api = undefined;
+    client.apiUpdatedAt = undefined;
     //: send success message with whole client's data
     return res.status(200).json({
       error: false,
       successMessage: "User found and data has been sent",
-      clientData: client
-    })
+      clientData: client,
+    });
   } catch (error) {
     return res.status(400).json({
       error: true,
-      errorMessage: error.message
-    })
+      errorMessage: error.message,
+    });
   }
-}
+};
 
 exports.saveDomainAndGenerateTxt = async (req, res) => {
   //? # Private Route
@@ -244,7 +248,7 @@ exports.saveDomainAndGenerateTxt = async (req, res) => {
       }
     }
     //: if(Domain not already saved) {
-    //: generate uuid 
+    //: generate uuid
     const uuid = uuidv4();
 
     //: update the domain with uuid in db
@@ -264,7 +268,7 @@ exports.saveDomainAndGenerateTxt = async (req, res) => {
     return res.status(200).json({
       error: false,
       successMessage: "Domain saved Successfully.",
-      txt: "2fa-verification=" + uuid
+      txt: "2fa-verification=" + uuid,
     });
   } catch (error) {
     return res.status(400).json({
@@ -278,7 +282,7 @@ exports.verifyTxt = async (req, res) => {
   //? # Private Route
   /**
    *: extract clientid from req.clientData set by isAuthenticated middleware
-   *: extract domain from body 
+   *: extract domain from body
    *: update verified field of that domain in database
    *: if(!updated) send error message
    *: if(updated) send success message
@@ -290,13 +294,13 @@ exports.verifyTxt = async (req, res) => {
   const domainname = req.body.domainname;
   //: update verified field of that domain in database
   const acknowledged = await Client.updateOne(
-    {_id: clientid, "domains.domainname": domainname},
+    { _id: clientid, "domains.domainname": domainname },
     {
       $set: {
         "domains.$.verified": true,
-      }
+      },
     }
-  )
+  );
   //: if(!updated) send error message
   if (acknowledged.modifiedCount == 0) {
     return res.status(400).json({
@@ -307,12 +311,48 @@ exports.verifyTxt = async (req, res) => {
   //: if(updated) send success message
   return res.status(200).json({
     error: false,
-    successMessage: "Domain verified successfully"
+    successMessage: "Domain verified successfully",
   });
+};
 
-}
+exports.getApiKey = async (req, res) => {
+  /**
+   *: extract clientid from req.clientData set by isAuthenticated middleware
+   *: fetch all latest details of that user from database
+   *: if(no API-key found) send success message with "apiKey" & "generatedAt" as null
+   *: if(API-key found) send success message with "apiKey" & "generatedAt" with its value
+   */
+  try {
+    //: extract clientid from req.clientData set by isAuthenticated middleware
+    const clientid = req.clientData._id;
+    //: fetch all latest details of that user from database
+    const client = await Client.findOne({ _id: clientid });
+    //: if(no API-key found) send success message with "apiKey" & "generatedAt" as null
+    if (!client.api) {
+      return res.status(200).json({
+        error: false,
+        successMessage: "No API-key exist in database",
+        apiKey: null,
+        generatedAt: null
+      });
+    }
+    //: if(API-key found) send success message with "apiKey" & "generatedAt" with its value
+    return res.status(200).json({
+      error: false,
+      successMessage: "API-key sent successfully",
+      apiKey: client.api,
+      generatedAt: client.apiUpdatedAt
+    })
 
-exports.generateApiKey = async (req, res)=>{
+  } catch (error) {
+    return res.status(400).json({
+      error: true,
+      errorMessage: error.message,
+    });
+  }
+};
+
+exports.generateApiKey = async (req, res) => {
   /**
    *: extract clientid from req.clientData set by isAuthenticated middleware
    *: fetch all latest details of that user from database
@@ -329,48 +369,52 @@ exports.generateApiKey = async (req, res)=>{
     //: extract clientid from req.clientData set by isAuthenticated middleware
     const clientid = req.clientData._id;
     //: fetch all latest details of that user from database
-    const client = await Client.findOne({_id: clientid});
+    const client = await Client.findOne({ _id: clientid });
     //: if(API-key already generated) send error that only one api at a time
     if (client.api) {
       return res.status(400).json({
         error: true,
-        errorMessage: "Client must have only one API-key at a time. Please delete the API-key and then generate new API"
-      })
+        errorMessage:
+          "Client must have only one API-key at a time. Please delete the API-key and then generate new API",
+      });
     }
     //: if(API-key not already generated) {
     //: generate API-key using uuid and save time when that API-key generated
     const apiKey = uuidv4();
     const generatedAt = new Date();
     //: update value of "api" & "apiUpdatedAt" fields in database
-    const dbResponse = await Client.updateOne({_id: req.clientData._id},{
-      $set: {
-        api: apiKey,
-        apiUpdatedAt: generatedAt
+    const dbResponse = await Client.updateOne(
+      { _id: req.clientData._id },
+      {
+        $set: {
+          api: apiKey,
+          apiUpdatedAt: generatedAt,
+        },
       }
-    })
+    );
     //: if(API-key not updated) send error that API-key not updated in DB
-    if(dbResponse.acknowledged == 0){
+    if (dbResponse.acknowledged == 0) {
       return res.status(400).json({
         error: true,
-        errorMessage: "API-key not updated in Database"
-      })
+        errorMessage: "API-key not updated in Database",
+      });
     }
     //: if(API-key updated) send success message with that API-key & generatedAt values
     return res.status(200).json({
       error: false,
       successMessage: "API-key generated successfully",
       apiKey: apiKey,
-      generatedAt: generatedAt 
-    })
+      generatedAt: generatedAt,
+    });
   } catch (error) {
     return res.status(400).json({
       error: true,
-      errorMessage: error.message
-    })
+      errorMessage: error.message,
+    });
   }
-}
+};
 
-exports.deleteApiKey = async(req, res)=> {
+exports.deleteApiKey = async (req, res) => {
   /**
    *: extract clientid from req.clientData set by isAuthenticated middleware
    *: fetch all latest details of that user from database
@@ -385,43 +429,43 @@ exports.deleteApiKey = async(req, res)=> {
     //: extract clientid from req.clientData set by isAuthenticated middleware
     const clientid = req.clientData._id;
     //: fetch all latest details of that user from database
-    const client = await Client.findOne({_id: clientid})
+    const client = await Client.findOne({ _id: clientid });
     //: if("api" & "apiUpdatedAt" fields are null or undefined) send error that no API-key exists in Database
-    if(!client.api && !client.apiUpdatedAt){
+    if (!client.api && !client.apiUpdatedAt) {
       return res.status(400).json({
         error: true,
-        errorMessage: "No API-key exists in database"
-      })
+        errorMessage: "No API-key exists in database",
+      });
     }
     //: if("api" & "apiUpdatedAt" fields exist) {
     //: set & update value of "api" & "apiUpdatedAt" fields to "null" in database
-    const dbResponse = await Client.updateOne({_id: req.clientData._id},{
-      $set: {
-        api: null,
-        apiUpdatedAt: null
+    const dbResponse = await Client.updateOne(
+      { _id: req.clientData._id },
+      {
+        $set: {
+          api: null,
+          apiUpdatedAt: null,
+        },
       }
-    })
+    );
 
     //: if(API-key not update) send error that API-key not deleted in DB
-    if(dbResponse.acknowledged == 0){
+    if (dbResponse.acknowledged == 0) {
       return res.status(400).json({
         error: true,
-        errorMessage: "API-key not deleted in Database"
-      })
+        errorMessage: "API-key not deleted in Database",
+      });
     }
 
     //: if(API-key updated) send success message that API-key deleted
     return res.status(200).json({
       error: false,
       successMessage: "API-key deleted successfully",
-    })
+    });
   } catch (error) {
     return res.status(400).json({
       error: true,
-      errorMessage: error.message
-    })
+      errorMessage: error.message,
+    });
   }
-
-
-
-}
+};

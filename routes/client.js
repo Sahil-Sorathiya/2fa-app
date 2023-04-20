@@ -12,6 +12,7 @@ const {
   verifyTxt,
   generateApiKey,
   deleteApiKey,
+  getApiKey,
 } = require("../controllers/client");
 const {
   validateRegister,
@@ -38,9 +39,11 @@ router.post("/savedomain/:clientid", isAuthenticated, isAuthorized, validateDoma
 
 router.post("/verifytxt/:clientid",isAuthenticated, isAuthorized, validateDomain, verifyTxtRecord, verifyTxt);
 
-router.get("/generateapikey/:clientid", isAuthenticated, isAuthorized, generateApiKey)
+router.get("/getapikey/:clientid", isAuthenticated, isAuthorized, getApiKey);
 
-router.delete("/deleteapikey/:clientid", isAuthenticated, isAuthorized, deleteApiKey)
+router.get("/generateapikey/:clientid", isAuthenticated, isAuthorized, generateApiKey);
+
+router.delete("/deleteapikey/:clientid", isAuthenticated, isAuthorized, deleteApiKey);
 
 module.exports = router;
 

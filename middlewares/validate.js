@@ -1,4 +1,5 @@
 const validator = require("validator");
+const { validate: uuidValidate } = require("uuid")
 
 exports.validateRegister = (req, res, next) => {
   if (!req.body) {
@@ -116,7 +117,7 @@ exports.validateDomain = (req, res, next) => {
   if (!req.body.domainname) {
     return res.status(400).json({
       error: true,
-      errorMessage: "Required parameters are not there",
+      errorMessage: "Required parameters are not there (domainname)",
     });
   }
 
@@ -140,3 +141,65 @@ exports.validateDomain = (req, res, next) => {
 
   return next();
 };
+
+exports.validateSendOtp = async (req, res, next) => {
+  if (!req.body) {
+    return res.status(400).json({
+      error: true,
+      errorMessage: "Request body not found",
+    });
+  }
+  if (!req.body.clientApiKey || !req.body.emailOfUser || !req.body.domainname) {
+    return res.status(400).json({
+      error: true,
+      errorMessage: "Required parameters are not there",
+    });
+  }
+
+  const { clientApiKey, emailOfUser, domainname } = req.body;
+
+  if (typeof clientApiKey !== "string") {
+    return res.status(400).json({
+      error: true,
+      errorMessage: "API-key is not a string",
+    });
+  }
+  if (typeof emailOfUser !== "string") {
+    return res.status(400).json({
+      error: true,
+      errorMessage: "'Email of User' is not a string",
+    });
+  }
+  if (typeof domainname !== "string") {
+    return res.status(400).json({
+      error: true,
+      errorMessage: "Domain name is not a string",
+    });
+  }
+  const isEmail = validator.isEmail(emailOfUser);
+  if (!isEmail) {
+    return res.status(400).json({
+      error: true,
+      errorMessage: "'Email of User' is invalid",
+    });
+  }
+
+  const isDomain = validator.isFQDN(domainname);
+  if (!isDomain) {
+    return res.status(400).json({
+      error: true,
+      errorMessage: "Domain is not valid",
+    });
+  }
+
+  const isApiKey = uuidValidate(clientApiKey)
+  if (!isApiKey) {
+    return res.status(400).json({
+      error: true,
+      errorMessage: "API-key malwared",
+    });
+  }
+
+  return next();
+
+}

@@ -24,21 +24,7 @@ const clientSchema = new mongoose.Schema({
     },
     apiUpdatedAt: {
         type: Date,
-    },
-    domains: [{
-        domainname: {
-            type: String,
-            required: true,
-            trim: true
-        },
-        verified: {
-            type: Boolean,
-            default: false
-        },
-        txt:{
-            type: String,
-        }
-    }]
+    }
 }, { timestamps: true })
 
 const Client = mongoose.model("Client", clientSchema)

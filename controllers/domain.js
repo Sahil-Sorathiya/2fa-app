@@ -3,7 +3,7 @@ const Client = require("../models/client");
 const Domain = require("../models/domain");
 
 exports.saveDomainAndGenerateTxt = async (req, res) => {
-  //? # Private Route
+  //! # Private Route
   /**
    *: First fetch domain name form req body
    *: Then take clientId from req.clientData object which is set in isAuthenticated middleware
@@ -80,7 +80,7 @@ exports.saveDomainAndGenerateTxt = async (req, res) => {
 };
 
 exports.verifyTxt = async (req, res) => {
-  //? # Private Route
+  //! # Private Route
   /**
    *: extract clientid from req.clientData set by isAuthenticated middleware
    *: extract domain from body

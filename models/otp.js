@@ -19,9 +19,13 @@ const otpSchema = new mongoose.Schema(
         type: mongoose.Schema.Types.ObjectId,
         ref: "Client"
     },
+    redirectUrl: {
+      type: String,
+      required: true
+    },
     createdAt: {
         type: Date,
-        expires: 10 * 60 * 60,
+        expires: 10 * 60,
         default: Date.now
     }
   },

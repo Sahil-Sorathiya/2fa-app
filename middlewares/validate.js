@@ -1,5 +1,4 @@
 const validator = require("validator");
-const { validate: uuidValidate } = require("uuid")
 
 exports.validateRegister = (req, res, next) => {
   if (!req.body) {
@@ -149,14 +148,14 @@ exports.validateSendOtp = async (req, res, next) => {
       errorMessage: "Request body not found",
     });
   }
-  if (!req.body.clientApiKey || !req.body.emailOfUser || !req.body.domainname) {
+  if (!req.body.clientApiKey || !req.body.emailOfUser || !req.body.domainname || !req.body.redirectUrl) {
     return res.status(400).json({
       error: true,
       errorMessage: "Required parameters are not there",
     });
   }
 
-  const { clientApiKey, emailOfUser, domainname } = req.body;
+  const { clientApiKey, emailOfUser, domainname, redirectUrl } = req.body;
 
   if (typeof clientApiKey !== "string") {
     return res.status(400).json({
@@ -176,6 +175,13 @@ exports.validateSendOtp = async (req, res, next) => {
       errorMessage: "Domain name is not a string",
     });
   }
+  if(typeof redirectUrl !== "string") {
+    return res.status(400).json({
+      error: true,
+      errorMessage: "Redirection URL is not a string"
+    })
+  }
+
   const isEmail = validator.isEmail(emailOfUser);
   if (!isEmail) {
     return res.status(400).json({
@@ -183,7 +189,6 @@ exports.validateSendOtp = async (req, res, next) => {
       errorMessage: "'Email of User' is invalid",
     });
   }
-
   const isDomain = validator.isFQDN(domainname);
   if (!isDomain) {
     return res.status(400).json({
@@ -191,15 +196,71 @@ exports.validateSendOtp = async (req, res, next) => {
       errorMessage: "Domain is not valid",
     });
   }
-
-  const isApiKey = uuidValidate(clientApiKey)
+  const isApiKey = validator.isUUID(clientApiKey)
   if (!isApiKey) {
     return res.status(400).json({
       error: true,
       errorMessage: "API-key malwared",
     });
   }
+  const isUrl = validator.isURL(redirectUrl, {
+    require_protocol: true
+  })
+  if(!isUrl) {
+    return res.status(400).json({
+      error: true,
+      errorMessage: "Redirection URL is in incorrect format",
+    });
+  }
 
   return next();
 
+}
+
+exports.validateVerifyOtp = (req, res, next)=>{
+  if (!req.body) {
+    return res.status(400).json({
+      error: true,
+      errorMessage: "Request body not found",
+    });
+  }
+  if (!req.body.uuid || !req.body.otpString) {
+    return res.status(400).json({
+      error: true,
+      errorMessage: "Required parameters are not there",
+    });
+  }
+
+  const { uuid, otpString,  } = req.body;
+
+  if (typeof uuid !== "string") {
+    return res.status(400).json({
+      error: true,
+      errorMessage: "Uuid is not a string",
+    });
+  }
+  if (typeof otpString !== "string") {
+    return res.status(400).json({
+      error: true,
+      errorMessage: "otp is not a string",
+    });
+  }
+
+  const isOtp = validator.isInt(otpString, {min: 100000, max: 999999})
+  if (!isOtp) {
+    return res.status(400).json({
+      error: true,
+      errorMessage: "Otp is not valid",
+    });
+  }
+
+  const isUuid = validator.isUUID(uuid)
+  if (!isUuid) {
+    return res.status(400).json({
+      error: true,
+      errorMessage: "Uuid malwared",
+    });
+  }
+
+  return next();
 }

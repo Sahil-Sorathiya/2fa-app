@@ -11,16 +11,14 @@ exports.isAuthenticated = async (req, res, next) => {
     });
   }
   try {
+    //: Verifying JWT token, if any error occured 'catch()' will directly handle it
     const decodedData = await jwt.verify(token, process.env.JWTSECRET);
-
+    //: Set client's whole data as req.clientData 
+    //! But it is not client's latest data
+    //! it is a data of client stored in JWT token while loging in
     req.clientData = decodedData;
-  } catch (error) {
-    //: here error will shown directly on client side. so no need to send entire
-    //: object like {
-    //:   error: true,
-    //:   errorMessage: "something"
-    //: }
 
+  } catch (error) {
     let errorMessage = "Some error occured";
 
     if (error.name === "TokenExpiredError") {
@@ -37,5 +35,5 @@ exports.isAuthenticated = async (req, res, next) => {
     });
   }
 
-  next();
+  return next();
 };

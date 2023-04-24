@@ -1,4 +1,5 @@
-const axios = require("axios");
+const dns = require('node:dns');
+const dnsPromises = dns.promises;
 const Client = require("../models/client");
 const Domain = require("../models/domain");
 
@@ -36,6 +37,7 @@ exports.verifyTxtRecord = async (req, res, next) => {
         errorMessage: "Client not exist in Database",
       });
     }
+    req.clientData = client
     //: check that domain exist or not (using clientid & domainname combination)
     const domainData = await Domain.findOne({
       client: clientid,
@@ -46,25 +48,14 @@ exports.verifyTxtRecord = async (req, res, next) => {
     if (domainData) {
       req.domainData = domainData;
       //: make dns lookup reqeust
-      const options = {
-        method: "GET",
-        url: "https://dns-lookup-by-api-ninjas.p.rapidapi.com/v1/dnslookup",
-        params: { domain: domainname },
-        headers: {
-          "X-RapidAPI-Key": process.env.RAPIDAPIKEY,
-          "X-RapidAPI-Host": "dns-lookup-by-api-ninjas.p.rapidapi.com",
-        },
-      };
-      const response = await axios.request(options);
+      const response = await dnsPromises.resolveTxt(domainData.domainname)
 
       //: filter TXT records which starts with "2fa-verification"
-      const txtRecords = response.data.filter((record) => {
+      const txtRecords = response.filter((record) => {
         return (
-          record.record_type === "TXT" &&
-          record.value.startsWith("2fa-verification")
+          record[0].startsWith("2fa-verification")
         );
       });
-
       //: if (no TXT record left after filtering) send error that no txt verification record found
       if (txtRecords.length == 0) {
         return res.status(400).json({
@@ -83,7 +74,7 @@ exports.verifyTxtRecord = async (req, res, next) => {
       }
       //: if (only one TXT record left after filtering)
       //: fetch uuid from TXT and compare it with txt verification uuid saved in DB
-      const txtUuid = txtRecords[0].value.split("=")[1];
+      const txtUuid = txtRecords[0][0].split("=")[1];
       //: if (both uuid matched) call next()
       const txtInDatabase = domainData.txt;
       if (txtInDatabase === txtUuid) {

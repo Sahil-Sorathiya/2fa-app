@@ -3,6 +3,7 @@ const { v4: uuidv4 } = require("uuid");
 const Client = require("../models/client");
 
 exports.getApiKey = async (req, res) => {
+  //! # Private Route
   /**
    *: extract clientid from req.clientData set by isAuthenticated middleware
    *: fetch all latest details of that user from database
@@ -44,6 +45,7 @@ exports.getApiKey = async (req, res) => {
 };
 
 exports.generateApiKey = async (req, res) => {
+  //! # Private Route
   /**
    *: extract clientid from req.clientData set by isAuthenticated middleware
    *: fetch all latest details of that user from database
@@ -106,6 +108,7 @@ exports.generateApiKey = async (req, res) => {
 };
 
 exports.deleteApiKey = async (req, res) => {
+  //! # Private Route
   /**
    *: extract clientid from req.clientData set by isAuthenticated middleware
    *: fetch all latest details of that user from database

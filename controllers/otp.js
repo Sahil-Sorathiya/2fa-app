@@ -34,6 +34,7 @@ exports.sendOtp = async (req, res) => {
         successMessage:
           "Verification mail with OTP sent successfully to given email address",
           maildata,
+          uuid: uuid
       });
       
     } catch (error) {

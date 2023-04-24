@@ -148,6 +148,7 @@ exports.validateSendOtp = async (req, res, next) => {
       errorMessage: "Request body not found",
     });
   }
+  console.log(req.body)
   if (!req.body.clientApiKey || !req.body.emailOfUser || !req.body.domainname || !req.body.redirectUrl) {
     return res.status(400).json({
       error: true,

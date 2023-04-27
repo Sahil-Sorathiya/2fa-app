@@ -105,6 +105,60 @@ exports.validateLogin = (req, res, next) => {
   next();
 };
 
+exports.validateForgotPassword = (req, res, next) => {
+  if (!req.body) {
+    return res.status(400).json({
+      error: true,
+      errorMessage: "Request body not found",
+    });
+  }
+  if (!req.body.email || !req.body.password) {
+    return res.status(400).json({
+      error: true,
+      errorMessage: "Required parameters are not there",
+    });
+  }
+
+  const { email, password } = req.body;
+
+  if (typeof email !== "string") {
+    return res.status(400).json({
+      error: true,
+      errorMessage: "Email is not a string",
+    });
+  }
+  if (typeof password !== "string") {
+    return res.status(400).json({
+      error: true,
+      errorMessage: "Password is not a string",
+    });
+  }
+
+  const isEmail = validator.isEmail(email);
+  if (!isEmail) {
+    return res.status(400).json({
+      error: true,
+      errorMessage: "Email is invalid",
+    });
+  }
+
+  if (password.length > 32) {
+    return res.status(400).json({
+      error: true,
+      errorMessage: "Password must not contain more than 20 characters",
+    });
+  }
+
+  if(!validator.isStrongPassword(password)){
+    return res.status(400).json({
+      error: true,
+      errorMessage: "Password must contain atleast 8 characters, one Capital letter, one small letter, one special character and one numaric value."
+    })
+  }
+
+  next();
+}
+
 exports.validateDomain = (req, res, next) => {
   if (!req.body) {
     return res.status(400).json({
@@ -264,4 +318,50 @@ exports.validateVerifyOtp = (req, res, next)=>{
   }
 
   return next();
+}
+
+exports.validateChangePassword = (req, res, next) => {
+  if (!req.body) {
+    return res.status(400).json({
+      error: true,
+      errorMessage: "Request body not found",
+    });
+  }
+  if (!req.body.currentPassword || !req.body.newPassword) {
+    return res.status(400).json({
+      error: true,
+      errorMessage: "Required parameters are not there",
+    });
+  }
+
+  const { currentPassword, newPassword } = req.body;
+
+  if (typeof currentPassword !== "string") {
+    return res.status(400).json({
+      error: true,
+      errorMessage: "Current Password is not a string",
+    });
+  }
+  if (typeof newPassword !== "string") {
+    return res.status(400).json({
+      error: true,
+      errorMessage: "New Password is not a string",
+    });
+  }
+
+   if (newPassword.length > 32) {
+    return res.status(400).json({
+      error: true,
+      errorMessage: "New Password must not contain more than 20 characters",
+    });
+  }
+
+  if(!validator.isStrongPassword(newPassword)){
+    return res.status(400).json({
+      error: true,
+      errorMessage: "New Password must contain atleast 8 characters, one Capital letter, one small letter, one special character and one numaric value."
+    })
+  }
+
+  next();
 }

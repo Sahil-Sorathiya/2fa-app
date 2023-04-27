@@ -30,9 +30,10 @@ exports.register = async (req, res) => {
     }
 
     //: if (not already registered) {
-    const hash = await bcrypt.hash(password, saltRounds);
     //: hash password with bcrypt
-    const token = await jwt.sign(
+    const hash = await bcrypt.hash(password, saltRounds);
+    //: generate JWT token with all client data
+    const token = jwt.sign(
       {
         uid: uuidv4(),
         clientname,
@@ -42,12 +43,14 @@ exports.register = async (req, res) => {
       process.env.JWTSECRET,
       { expiresIn: 60 * 60 } // 1 hour
     );
-    //: generate JWT token with all client data
-    const verificationUrl = `${process.env.PROTOCOL}://${process.env.DOMAINNAME}/auth/verify/${token}`;
     //: send verification mail to given email id and send success message
+    const verificationUrl = `${process.env.PROTOCOL}://${process.env.DOMAINNAME}/auth/verify/register/${token}`;
     const maildata =
       process.env.SENDMAIL === "true"
-        ? await sendMail(email, verificationUrl)
+        ? await sendMail(email, {
+          isRegister: true,
+          verificationUrl: verificationUrl
+        })
         : `Hello I'm maildata ${(email, verificationUrl)}`;
     return res.status(200).json({
       error: false,
@@ -58,14 +61,15 @@ exports.register = async (req, res) => {
     });
     // TODO before final production remove verificationUrl and maildata fields from response
   } catch (error) {
+    console.log(error);
     return res.status(400).json({
       error: true,
       errorMessage: error.message,
     });
   }
-};
+}
 
-exports.verifyClient = async (req, res) => {
+exports.verifyRegister = async (req, res) => {
   /**
    *: First check that client is already verified or not
    *: if(alredy verified) send error
@@ -107,7 +111,7 @@ exports.verifyClient = async (req, res) => {
     }
     return res.status(400).send(errorMessage);
   }
-};
+}
 
 exports.login = async (req, res) => {
   /**
@@ -159,4 +163,145 @@ exports.login = async (req, res) => {
       errorMessage: error.message,
     });
   }
-};
+}
+
+exports.forgotPassword = async (req, res) => {
+  try {
+    const {email, password} = req.body;
+    const clientData = await Client.findOne({email: email})
+    if(!clientData) {
+      return res.status(400).json({
+        error: true,
+        errorMessage: "Email not registered on our site"
+      })
+    }
+    //: if (not already registered) {
+    //: hash password with bcrypt
+    const saltRounds = 10;
+    const hash = await bcrypt.hash(password, saltRounds);
+    const token = jwt.sign(
+      { email, password: hash },
+      process.env.JWTSECRET,
+      { expiresIn: 10 * 60 } // 10 minutes
+    );
+    //: generate JWT token with all client data
+    const verificationUrl = `${process.env.PROTOCOL}://${process.env.DOMAINNAME}/auth/verifyforgotpassword/${token}`;
+    //: send verification mail to given email id and send success message
+    const maildata =
+      process.env.SENDMAIL === "true"
+        ? await sendMail(email, {
+          isForgotPassword: true,
+          verificationUrl: verificationUrl
+        })
+        : `Hello I'm maildata ${(email, verificationUrl)}`;
+    return res.status(200).json({
+      error: false,
+      successMessage:
+        "Verification mail sent successfully to given email address",
+      verificationUrl,
+      maildata,
+    });
+    // TODO before final production remove verificationUrl and maildata fields from response
+  } catch (error) {
+    return res.status(400).json({
+      error: true,
+      errorMessage: error.message,
+    });
+  }
+}
+
+exports.verifyForgotPassword = async (req, res) => {
+  /**
+   *: First check that client is already verified or not
+   *: if(alredy verified) send error
+   *: if(!alredy verified) save client data to DB and send success message
+   */
+
+   try {
+    const { token } = req.params;
+    const decodedData = await jwt.verify(token, process.env.JWTSECRET);
+    const { password, email } = decodedData;
+
+    //: Checking that user is already verified or not
+    const dbResponse = await Client.findOneAndUpdate({ email },{
+      $set: {
+        "password": password
+      }
+    });
+
+    //: if (not already verified)
+    if (dbResponse.acknowledged == 0) {
+      return res.status(400).send("Password not updated in Database");
+    }
+
+    return res.status(200).send("Password changed Successfully")
+  } catch (error) {
+    //: here error will shown directly on client side. so no need to send entire
+    //: object like {
+    //:   error: true,
+    //:   errorMessage: "something"
+    //: }
+    let errorMessage = "Some error occured";
+    if (error.name === "TokenExpiredError") {
+      errorMessage = "Token is Expired";
+    }
+
+    if (error.name === "JsonWebTokenError") {
+      errorMessage = error.message;
+    }
+    return res.status(400).send(errorMessage);
+  }
+}
+
+exports.changePassword = async (req, res) => {
+  try {
+    const clientid = req.clientData._id;
+    const { currentPassword, newPassword } = req.body;
+    //: hash password with bcrypt
+    const client = await Client.findOne({ _id: clientid });
+    if (!client) {
+      return res.status(400).json({
+        error: true,
+        errorMessage: "User not exist in our Database",
+      });
+    }
+    const isPasswordMatch = await bcrypt.compare(
+      currentPassword,
+      client.password
+    );
+    if (!isPasswordMatch) {
+      return res.status(400).json({
+        error: true,
+        errorMessage: "Current password is incorrect",
+      });
+    }
+    const saltRounds = 10;
+    const hash = await bcrypt.hash(newPassword, saltRounds);
+    const dbResponse = await Client.findOneAndUpdate(
+      { _id: clientid },
+      {
+        $set: {
+          password: hash,
+        },
+      }
+    );
+
+    //: if (not already verified)
+    if (dbResponse.acknowledged == 0) {
+      return res.status(400).json({
+        error: true,
+        errorMessage: "Password not updated in Database"
+      });
+    }
+
+    return res.status(200).json({
+      error: false,
+      successMessage: "Password changed Successfully"
+    });
+  } catch (error) {
+    return res.status(400).json({
+      error: true,
+      errorMessage: error.message,
+    });
+  }
+}

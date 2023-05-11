@@ -24,10 +24,14 @@ exports.sendOtp = async (req, res) => {
           errorMessage: "Otp object not saved in database"
         })
       }
-  
+
       const maildata =
         process.env.SENDMAIL === "true"
-          ? await sendMail(emailOfUser, otpString, true, domainname)
+          ? await await sendMail(emailOfUser, {
+            isOtp: true,
+            domainname: domainname,
+            otpString: otpString
+          })
           : `Hello I'm maildata(SENDMAIL env variable is false. so no mail has been sent). userMail: ${emailOfUser}, otpString: ${otpString}, clientDomain: ${domainname}`;
       return res.status(200).json({
         error: false,

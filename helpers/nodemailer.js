@@ -1,7 +1,6 @@
 const nodemailer = require('nodemailer');
 
 exports.sendMail = async (email, options)=>{
-    console.log(typeof process.env.MAILHOST);
         const tranport = nodemailer.createTransport({
             host: process.env.MAILHOST,
             secure: true,
@@ -14,7 +13,7 @@ exports.sendMail = async (email, options)=>{
 
         var subject = "";
         var htmlCode = "";
-        if(options?.isRegister) {
+        if(options.isRegister) {
             subject = "Registration Verification";
             htmlCode =  `
             <h4>This mail is sent by 2FA team</h4>
@@ -22,15 +21,15 @@ exports.sendMail = async (email, options)=>{
             <a href="${options.verificationUrl}">${options.verificationUrl}</a>
             <p style="color: red;">2FA is a project developed by CS students.If this process is not done by you kindly ignore this mail. If you are getting too many mails, contact to <a href="http://developersahil.tech">developersahil.tech</a></p>  
             `
-        } else if(options?.isOtp) {
+        } else if(options.isOtp) {
             subject = "2 Factor Authentication"
             htmlCode = `
             <h4>This mail is sent by 2FA team</h4>
             <p>Your OTP for <a href="https://${options.domainname}" target="_blank">${options.domainname}</a> is</p>
-            <h5>${options.otpString}</h5>
+            <h2>${options.otpString}</h2>
             <p style="color: red;">2FA is a project developed by CS students.If this process is not done by you kindly ignore this mail. If you are getting too many mails, contact to <a href="http://developersahil.tech">developersahil.tech</a></p>  
             `
-        } else if(options?.isForgotPassword) {
+        } else if(options.isForgotPassword) {
             subject = "Email Verification for reset the password"
             htmlCode =  `
             <h4>This mail is sent by 2FA team</h4>

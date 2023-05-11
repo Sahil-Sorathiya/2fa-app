@@ -48,7 +48,7 @@ exports.register = async (req, res) => {
     const maildata =
       process.env.SENDMAIL === "true"
         ? await sendMail(email, {
-          isRegister: true,
+          isOtp: true,
           verificationUrl: verificationUrl
         })
         : `Hello I'm maildata ${(email, verificationUrl)}`;
@@ -61,7 +61,6 @@ exports.register = async (req, res) => {
     });
     // TODO before final production remove verificationUrl and maildata fields from response
   } catch (error) {
-    console.log(error);
     return res.status(400).json({
       error: true,
       errorMessage: error.message,
@@ -185,7 +184,7 @@ exports.forgotPassword = async (req, res) => {
       { expiresIn: 10 * 60 } // 10 minutes
     );
     //: generate JWT token with all client data
-    const verificationUrl = `${process.env.PROTOCOL}://${process.env.DOMAINNAME}/auth/verifyforgotpassword/${token}`;
+    const verificationUrl = `${process.env.PROTOCOL}://${process.env.DOMAINNAME}/auth/verify/forgotpassword/${token}`;
     //: send verification mail to given email id and send success message
     const maildata =
       process.env.SENDMAIL === "true"

@@ -2,6 +2,8 @@ const dns = require('node:dns');
 const dnsPromises = dns.promises;
 const Client = require("../models/client");
 const Domain = require("../models/domain");
+const { setVerifiedToFalse } = require('../helpers/setVerifiedToFalse');
+const { setVerifiedToTrue } = require('../helpers/setVerifiedToTrue');
 
 exports.verifyTxtRecord = async (req, res, next) => {
   //: extract clientid from req.clientData set by isAuthenticated or verifyApiKey middleware
@@ -26,10 +28,13 @@ exports.verifyTxtRecord = async (req, res, next) => {
   try {
     //: extract domainname from req.body which is validated by "validateDomain" middleware
     const { domainname } = req.body;
+
     //: extract clientid from req.clientData set by isAuthenticated or verifyApiKey middleware
     const clientid = req.clientData._id;
+
     //: fetch all latest details of that user from database
     const client = await Client.findOne({ _id: clientid });
+
     //: if client not exist send error
     if (!client) {
       return res.status(400).json({
@@ -38,6 +43,7 @@ exports.verifyTxtRecord = async (req, res, next) => {
       });
     }
     req.clientData = client
+
     //: check that domain exist or not (using clientid & domainname combination)
     const domainData = await Domain.findOne({
       client: clientid,
@@ -47,6 +53,7 @@ exports.verifyTxtRecord = async (req, res, next) => {
     //: if (domain found)
     if (domainData) {
       req.domainData = domainData;
+
       //: make dns lookup reqeust
       const response = await dnsPromises.resolveTxt(domainData.domainname)
 
@@ -56,59 +63,45 @@ exports.verifyTxtRecord = async (req, res, next) => {
           record[0].startsWith("2fa-verification")
         );
       });
+
       //: if (no TXT record left after filtering) send error that no txt verification record found
       if (txtRecords.length == 0) {
+        setVerifiedToFalse(clientid, domainname, domainData);
         return res.status(400).json({
           error: true,
           errorMessage:
-            "It may take a while to propagate the TXT record. Please wait upto 24 hrs after updating TXT record",
+            "DNS Verification Failed. It may take a while to propagate the TXT record. Please wait upto 24 hrs after updating TXT record",
         });
       }
+
       //: if (more than one TXT records left after filtering)
       if (txtRecords.length > 1) {
+        setVerifiedToFalse(clientid, domainname, domainData);
         return res.status(400).json({
           error: true,
           errorMessage:
             "More than one txt records found which starts with '2fa-verification' on your DNS Lookup",
         });
       }
+
       //: if (only one TXT record left after filtering)
       //: fetch uuid from TXT and compare it with txt verification uuid saved in DB
       const txtUuid = txtRecords[0][0].split("=")[1];
+
       //: if (both uuid matched) call next()
       const txtInDatabase = domainData.txt;
       if (txtInDatabase === txtUuid) {
+        setVerifiedToTrue(clientid, domainname, domainData);
         return next();
       }
+
       //: if (both uuid not matched) send error message that verification is unsuccessfull
       else {
-        const verifiedInDatabase = domainData.verified;
-        if (verifiedInDatabase) {
-          //: domain "verified" status in database is true and
-          //: here verification failed that means either owner of domain is changed or txt record deleted,
-
-          //TODO in this case what we can do?
-
-          //: as of now I changed the verification status from true to false
-          const acknowledged = await Domain.updateOne(
-            { client: clientid, domainname: domainname },
-            {
-              $set: {
-                verified: false,
-              },
-            }
-          );
-          if (acknowledged.modifiedCount == 0) {
-            return res.status(400).json({
-              error: true,
-              errorMessage: "Verification status not updated in Database",
-            });
-          }
-        }
+        setVerifiedToFalse(clientid, domainname, domainData);
         return res.status(400).json({
           error: true,
           errorMessage:
-            "Domain verification falied. Please verify your domain again.",
+            "Domain verification failed. Key in TXT record is wrong. Please verify your domain again.",
         });
       }
     }

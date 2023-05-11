@@ -15,9 +15,7 @@ const clientSchema = new mongoose.Schema({
     password: {
         type: String,
         required: true,
-        trim: true,
-        min: 8,
-        max: 32
+        trim: true
     },
     api: {
         type: String,

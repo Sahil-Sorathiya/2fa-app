@@ -13,10 +13,12 @@ const domainSchema = new mongoose.Schema(
     },
     txt: {
       type: String,
+      required: true
     },
     client: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Client"
+        ref: "Client",
+        required: true
     }
   },
   { timestamps: true }

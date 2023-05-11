@@ -6,6 +6,8 @@ const otpSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
+      min: 6,
+      max: 6
     },
     uuid: {
       type: String,
@@ -13,11 +15,13 @@ const otpSchema = new mongoose.Schema(
     },
     domain: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Domain"
+      ref: "Domain",
+      required: true
     },
     client: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Client"
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Client",
+      required: true
     },
     redirectUrl: {
       type: String,

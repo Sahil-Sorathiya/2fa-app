@@ -82,34 +82,10 @@ exports.saveDomainAndGenerateTxt = async (req, res) => {
 exports.verifyTxt = async (req, res) => {
   //! # Private Route
   /**
-   *: extract clientid from req.clientData set by isAuthenticated middleware
-   *: extract domain from body
-   *: update verified field of that domain in database
-   *: if(!updated) send error message
-   *: if(updated) send success message
+   *: send success message
    */
 
-  //: extract clientid from req.clientData set by isAuthenticated middleware
-  const clientid = req.clientData._id;
-  //: extract domain from body
-  const domainname = req.body.domainname;
-  //: update verified field of that domain in database
-  const acknowledged = await Domain.updateOne(
-    { client: clientid, domainname: domainname },
-    {
-      $set: {
-        verified: true,
-      },
-    }
-  );
-  //: if(!updated) send error message
-  if (acknowledged.modifiedCount == 0) {
-    return res.status(400).json({
-      error: true,
-      errorMessage: "Verification status not updated in Database",
-    });
-  }
-  //: if(updated) send success message
+  //: send success message
   return res.status(200).json({
     error: false,
     successMessage: "Domain verified successfully",

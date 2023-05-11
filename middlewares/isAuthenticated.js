@@ -28,7 +28,6 @@ exports.isAuthenticated = async (req, res, next) => {
     if (error.name === "JsonWebTokenError") {
       errorMessage = error.message;
     }
-    // console.log(error);
     return res.status(400).json({
       error: true,
       errorMessage: errorMessage

@@ -35,7 +35,7 @@ exports.validateRegister = (req, res, next) => {
     });
   }
 
-  if (clientname.length > 64) {
+  if (clientname.length >= 64) {
     return res.status(400).json({
       error: true,
       errorMessage: "Client Name must not contain more than 64 characters",
@@ -50,10 +50,10 @@ exports.validateRegister = (req, res, next) => {
     });
   }
 
-  if (password.length > 32) {
+  if (password.length >= 32) {
     return res.status(400).json({
       error: true,
-      errorMessage: "Password must not contain more than 20 characters",
+      errorMessage: "Password must not contain more than 32 characters",
     });
   }
 
@@ -202,7 +202,7 @@ exports.validateSendOtp = async (req, res, next) => {
       errorMessage: "Request body not found",
     });
   }
-  console.log(req.body)
+  
   if (!req.body.clientApiKey || !req.body.emailOfUser || !req.body.domainname || !req.body.redirectUrl) {
     return res.status(400).json({
       error: true,

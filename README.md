@@ -1,7 +1,10 @@
 
 # For Detailed Documentation
 
-click [here](https://documenter.getpostman.com/view/20548152/2sA35MxHxe)
+### Click [here](https://documenter.getpostman.com/view/20548152/2sA35MxHxe)
+
+## Screenshot of Documentation
+![Screenshot of Documentation](documentation-screenshot.png "Screenshot")
 
 # 2FA-Project Server Side APIs
 

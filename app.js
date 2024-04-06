@@ -36,7 +36,7 @@ app.use('/domain', domainRoutes)
 app.use('/otp', otpRoutes)
 
 app.get("/", (req, res)=>{
-    return res.send("Hello World!!")
+    return res.send("Welcome to 2FA APIs Server.\n\nServer is up and running, you can make requests.\n\nSee documentation for more info.")
 })
 
 //: Server Linsteing

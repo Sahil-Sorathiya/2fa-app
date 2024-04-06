@@ -48,7 +48,7 @@ exports.register = async (req, res) => {
     const maildata =
       process.env.SENDMAIL === "true"
         ? await sendMail(email, {
-          isOtp: true,
+          isRegister: true,
           verificationUrl: verificationUrl
         })
         : `Hello I'm maildata ${(email, verificationUrl)}`;
@@ -165,6 +165,13 @@ exports.login = async (req, res) => {
 }
 
 exports.forgotPassword = async (req, res) => {
+  /**
+   *: if (not already registered) {
+   *:   hash password with bcrypt
+   *:   generate JWT token with all client data
+   *:   send verification mail to given email id and send success message
+   *: }
+   */
   try {
     const {email, password} = req.body;
     const clientData = await Client.findOne({email: email})

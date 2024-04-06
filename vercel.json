@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "name": "code-highlighter",
+  "name": "2fa",
   "builds": [
      { "src": "app.js", "use": "@vercel/node" }
   ],
